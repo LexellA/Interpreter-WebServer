@@ -13,6 +13,8 @@ target_include_directories(chat_server PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 target_compile_features(chat_server PUBLIC cxx_std_20)
 
+target_link_libraries(chat_server mysqlcppconn)
+
 #添加测试
 enable_testing()
 add_subdirectory(tests)
