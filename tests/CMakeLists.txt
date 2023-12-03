@@ -32,3 +32,14 @@ target_compile_features(test_db_connectionpool PRIVATE cxx_std_20)
 target_link_libraries(test_db_connectionpool mysqlcppconn)
 
 add_test(NAME test_db_connectionpool COMMAND test_db_connectionpool)
+
+#test httprequest
+add_executable(test_httprequest test_http_request.cpp
+                                ${CMAKE_SOURCE_DIR}/src/http_request.cpp
+                                ${CMAKE_SOURCE_DIR}/src/log.cpp)
+
+target_include_directories(test_httprequest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_features(test_httprequest PRIVATE cxx_std_20)
+
+add_test(NAME test_httprequest COMMAND test_httprequest)
