@@ -2,6 +2,7 @@
 #include <cassert>
 #include <string>
 #include "../src/http_request.h"
+#include "../src/buffer.h"
 
 using namespace server;
 
@@ -12,9 +13,11 @@ void test_parse_request()
                           "Content-Type: application/json\r\n"
                           "\r\n"
                           "{\"name\": \"John\", \"age\": 30}";
-
+    
+    Buffer buffer(1024);
+    buffer.push_back(request);
     HTTPRequest http_request;
-    bool result = http_request.parse(request);
+    bool result = http_request.parse(buffer);
 
     // Verify the parsing result
     assert(result == true);
@@ -32,8 +35,10 @@ void test_parse_request_invalid()
                           "Host: localhost\r\n"
                           "Content-Type: application/json\r\n";
 
+    Buffer buffer(1024);
+    buffer.push_back(request);
     HTTPRequest http_request;
-    bool result = http_request.parse(request);
+    bool result = http_request.parse(buffer);
 
     // Verify the parsing result
     assert(result == false);

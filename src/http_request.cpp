@@ -7,6 +7,27 @@
 namespace server
 {
 
+const std::unordered_map<std::string_view, HTTPMethod> HTTPRequest::m_method_map = 
+{
+    {"GET", HTTPMethod::GET},
+    {"POST", HTTPMethod::POST},
+    {"PUT", HTTPMethod::PUT},
+    {"DELETE", HTTPMethod::DELETE},
+    {"HEAD", HTTPMethod::HEAD},
+    {"CONNECT", HTTPMethod::CONNECT},
+    {"OPTIONS", HTTPMethod::OPTIONS},
+    {"TRACE", HTTPMethod::TRACE},
+    {"PATCH", HTTPMethod::PATCH}
+};
+
+const std::unordered_map<std::string_view, HTTPVersion> HTTPRequest::m_version_map = 
+{
+    {"HTTP/1.0", HTTPVersion::HTTP_10},
+    {"HTTP/1.1", HTTPVersion::HTTP_11},
+    {"HTTP/2.0", HTTPVersion::HTTP_20}
+};
+
+
 HTTPRequest::HTTPRequest()
     : m_method(HTTPMethod::UNKNOWN), m_version(HTTPVersion::UNKNOWN)
     , m_state(ParseState::REQUEST_LINE)
@@ -17,10 +38,22 @@ HTTPRequest::~HTTPRequest()
 {
 }
 
-bool HTTPRequest::parse(const std::string &request)
+void HTTPRequest::reset()
+{
+    m_method = HTTPMethod::UNKNOWN;
+    m_version = HTTPVersion::UNKNOWN;
+    m_path.clear();
+    m_body.clear();
+    m_headers.clear();
+    m_state = ParseState::REQUEST_LINE;
+}
+
+bool HTTPRequest::parse(Buffer& buffer)
 {
     const std::string CRLF = "\r\n";
     size_t pos = 0;
+    std::string_view request(buffer.data(), buffer.available());
+
     while (m_state != ParseState::FINISHED)
     {
         size_t line_end = request.find(CRLF, pos);
@@ -56,8 +89,11 @@ bool HTTPRequest::parse(const std::string &request)
         default:
             break;
         }
+
         pos += len + CRLF.size();
     }
+
+    buffer.pop_front(pos);
     return true;
 }
 
@@ -78,45 +114,17 @@ bool HTTPRequest::parse_request_line(std::string_view request_line)
     if (parts.size() != 3)
         return false;
 
-    if (parts[0] == "GET")
-        m_method = HTTPMethod::GET;
-    else if (parts[0] == "POST")
-        m_method = HTTPMethod::POST;
-    else if (parts[0] == "HEAD")
-        m_method = HTTPMethod::HEAD;
-    else if (parts[0] == "PUT")
-        m_method = HTTPMethod::PUT;
-    else if (parts[0] == "DELETE")
-        m_method = HTTPMethod::DELETE;
-    else if (parts[0] == "CONNECT")
-        m_method = HTTPMethod::CONNECT;
-    else if (parts[0] == "OPTIONS")
-        m_method = HTTPMethod::OPTIONS;
-    else if (parts[0] == "TRACE")
-        m_method = HTTPMethod::TRACE;
-    else if (parts[0] == "PATCH")
-        m_method = HTTPMethod::PATCH;
-    else
-    {
-        m_method = HTTPMethod::UNKNOWN;
-        return false;
-    }
+    m_method = parse_method(parts[0]);
 
-    if (parts[2] == "HTTP/1.0")
-        m_version = HTTPVersion::HTTP_10;
-    else if (parts[2] == "HTTP/1.1")
-        m_version = HTTPVersion::HTTP_11;
-    else if (parts[2] == "HTTP/2.0")
-        m_version = HTTPVersion::HTTP_20;
-    else
-    {
-        m_version = HTTPVersion::UNKNOWN;
-        return false;
-    }
+    m_version = parse_version(parts[2]);
 
     m_path = parts[1];
 
     m_state = ParseState::HEADER;
+
+    if(m_method == HTTPMethod::UNKNOWN || m_version == HTTPVersion::UNKNOWN)
+        return false;
+
     return true;
 }
 
@@ -137,6 +145,24 @@ bool HTTPRequest::parse_header(std::string_view header)
 
     m_headers[std::string(key)] = std::string(value);
     return true;
+}
+
+HTTPMethod HTTPRequest::parse_method(std::string_view method)
+{
+    auto it = m_method_map.find(method);
+    if(it != m_method_map.end())
+        return it->second;
+    else
+        return HTTPMethod::UNKNOWN;
+}
+
+HTTPVersion HTTPRequest::parse_version(std::string_view version)
+{
+    auto it = m_version_map.find(version);
+    if(it != m_version_map.end())
+        return it->second;
+    else
+        return HTTPVersion::UNKNOWN;
 }
 
 } // namespace server

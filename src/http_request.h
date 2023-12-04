@@ -5,6 +5,7 @@
 
 
 #include "http_types.h"
+#include "buffer.h"
 
 namespace server
 {
@@ -15,7 +16,9 @@ public:
     HTTPRequest();
     ~HTTPRequest();
 
-    bool parse(const std::string &request);
+    void reset();
+
+    bool parse(Buffer& buffer);
 
     HTTPMethod get_method() const { return m_method; }
     HTTPVersion get_version() const { return m_version; }
@@ -40,8 +43,14 @@ private:
 
     ParseState m_state;
 
+    static const std::unordered_map<std::string_view, HTTPMethod> m_method_map;
+    static const std::unordered_map<std::string_view, HTTPVersion> m_version_map;
+
     bool parse_request_line(std::string_view request_line);
     bool parse_header(std::string_view header);
+
+    HTTPMethod parse_method(std::string_view method);
+    HTTPVersion parse_version(std::string_view version);
 
 };
 

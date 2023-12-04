@@ -36,10 +36,22 @@ add_test(NAME test_db_connectionpool COMMAND test_db_connectionpool)
 #test httprequest
 add_executable(test_httprequest test_http_request.cpp
                                 ${CMAKE_SOURCE_DIR}/src/http_request.cpp
-                                ${CMAKE_SOURCE_DIR}/src/log.cpp)
+                                ${CMAKE_SOURCE_DIR}/src/log.cpp
+                                ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
 
 target_include_directories(test_httprequest PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 target_compile_features(test_httprequest PRIVATE cxx_std_20)
 
 add_test(NAME test_httprequest COMMAND test_httprequest)
+
+#test buffer
+
+add_executable(test_buffer test_buffer.cpp
+                            ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+
+target_include_directories(test_buffer PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_features(test_buffer PRIVATE cxx_std_20)
+
+add_test(NAME test_buffer COMMAND test_buffer)
