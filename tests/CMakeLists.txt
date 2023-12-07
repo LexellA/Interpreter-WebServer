@@ -55,3 +55,18 @@ target_include_directories(test_buffer PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_features(test_buffer PRIVATE cxx_std_20)
 
 add_test(NAME test_buffer COMMAND test_buffer)
+
+#test httpresponse
+
+add_executable(test_httpresponse test_http_response.cpp
+                                ${CMAKE_SOURCE_DIR}/src/http_response.cpp
+                                ${CMAKE_SOURCE_DIR}/src/log.cpp
+                                ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+
+target_include_directories(test_httpresponse PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_features(test_httpresponse PRIVATE cxx_std_20)
+
+file(COPY ${CMAKE_SOURCE_DIR}/root/ DESTINATION ${CMAKE_BINARY_DIR}/tests/root/)
+
+add_test(NAME test_httpresponse COMMAND test_httpresponse)

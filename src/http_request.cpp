@@ -57,18 +57,19 @@ bool HTTPRequest::parse(Buffer& buffer)
     while (m_state != ParseState::FINISHED)
     {
         size_t line_end = request.find(CRLF, pos);
-        if(m_state == ParseState::BODY)
-        {
-            line_end = request.size();
-        }
-        if (line_end == std::string::npos)
-            return false;
-        size_t len = line_end - pos;
-        std::string_view line(request.data() + pos, len);
-
+        size_t len = 0;
+        std::string_view line;
         switch (m_state)
         {
         case ParseState::REQUEST_LINE:
+            if(line_end == std::string::npos)
+            {
+                return false;
+            }
+            len = line_end - pos;
+            line = std::string_view(request.data() + pos, len);
+            
+            
             if (!parse_request_line(line))
             {
                 log_error("parse request line failed, request: \n{}\nerror line: {}", request, line);
@@ -76,6 +77,13 @@ bool HTTPRequest::parse(Buffer& buffer)
             }
             break;
         case ParseState::HEADER:
+            if(line_end == std::string::npos)
+            {
+                return false;
+            }
+            len = line_end - pos;
+            line = std::string_view(request.data() + pos, len);
+
             if (!parse_header(line))
             {
                 log_error("parse header failed, header, request: \n{}\nerror header: {}", request, line);
@@ -83,7 +91,13 @@ bool HTTPRequest::parse(Buffer& buffer)
             }
             break;
         case ParseState::BODY:
-            m_body = request.substr(pos);
+            if(m_headers.count("Content-Length") == 0)
+            {
+                m_state = ParseState::FINISHED;
+                break;
+            }
+            len = std::stoi(m_headers["Content-Length"]);
+            m_body = std::string(request.data() + pos, len);
             m_state = ParseState::FINISHED;
             break;
         default:
