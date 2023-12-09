@@ -35,7 +35,6 @@ void Buffer::push_back(const std::string &str)
 void Buffer::push_back(Buffer &buf)
 {
     push_back(buf.data(), buf.available());
-    buf.pop_front(buf.available());
 }
 
 void Buffer::clear()
