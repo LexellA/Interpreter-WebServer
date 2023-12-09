@@ -70,3 +70,30 @@ target_compile_features(test_httpresponse PRIVATE cxx_std_20)
 file(COPY ${CMAKE_SOURCE_DIR}/root/ DESTINATION ${CMAKE_BINARY_DIR}/tests/root/)
 
 add_test(NAME test_httpresponse COMMAND test_httpresponse)
+
+#test httpconnection
+
+add_executable(test_httpconnection test_http_connection.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/http_connection.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/http_request.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/http_response.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/log.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+
+target_include_directories(test_httpconnection PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_features(test_httpconnection PRIVATE cxx_std_20)
+
+add_test(NAME test_httpconnection COMMAND test_httpconnection)
+
+
+
+#test timer
+add_executable(test_timer test_timer.cpp
+                            ${CMAKE_SOURCE_DIR}/src/timer.cpp)
+
+target_include_directories(test_timer PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_features(test_timer PRIVATE cxx_std_20)
+
+add_test(NAME test_timer COMMAND test_timer)

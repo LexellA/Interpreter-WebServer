@@ -13,24 +13,21 @@ namespace server
 class HTTPResponse
 {
 public:
-    HTTPResponse(HTTPStatus status, const std::string &srcdir, const std::string &path, bool keep_alive);
+    HTTPResponse();
     ~HTTPResponse();
 
-    void init(HTTPStatus status, const std::string& srcdir, const std::string& path, bool keep_alive);
+    void init(HTTPStatus status, bool keep_alive, const std::string &content = "", const std::string &content_type = "");
+    void set_file(const std::string &srcdir, const std::string &path);
 
-    void get_header(Buffer& buffer);
-    const char* get_content() const { return m_data; }
+    void get_response(Buffer &buffer);
+    bool has_mmap() const { return m_data != nullptr; }
+    const char *get_content() const { return m_data; }
     size_t get_content_length() const { return m_file_stat.st_size; }
 
 
-
 private:
-    void add_status_line(Buffer& buffer);
-    void add_headers(Buffer& buffer);
-    void add_content(Buffer& buffer);
-    void error_content(Buffer& buffer, std::string message);
-    std::string get_file_type();
-
+    std::string get_type(const std::string &suffix);
+    std::string error_html(const std::string& msg);
 
     static const std::unordered_map<HTTPStatus, std::string> m_status_map;
     static const std::unordered_map<std::string, std::string> m_content_type_map;
@@ -38,6 +35,9 @@ private:
     HTTPStatus m_status;
     std::string m_srcdir;
     std::string m_path;
+
+    std::unordered_map<std::string, std::string> m_headers;
+    std::string m_content;
     
     bool m_keep_alive;
 

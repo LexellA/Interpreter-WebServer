@@ -99,6 +99,7 @@ bool HTTPRequest::parse(Buffer& buffer)
             len = std::stoi(m_headers["Content-Length"]);
             m_body = std::string(request.data() + pos, len);
             m_state = ParseState::FINISHED;
+            pos -= CRLF.size();
             break;
         default:
             break;

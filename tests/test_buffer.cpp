@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <fcntl.h>
+#include <sys/uio.h>
 #include <iostream>
 #include "../src/buffer.h"
 
@@ -52,12 +54,26 @@ void test_edge()
 
 }
 
+void test_file()
+{
+    Buffer buffer(10);
+    int fd = open("test_buffer.txt", O_RDONLY);
+    int saved_errno = 0;
+    buffer.read(fd, &saved_errno);
+    std::cout << buffer.data() << std::endl;
+    std::cout << buffer.available() << std::endl;
+    std::cout << buffer.capacity() << std::endl;
+    std::cout << saved_errno << std::endl;
+    close(fd);
+}
+
 int main()
 {
     test_push_back();
     test_pop_front();
     test_clear();
     test_edge();
+    test_file();
 
     std::cout << "Buffer tests passed!" << std::endl;
 
