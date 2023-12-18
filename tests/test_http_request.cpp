@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include "../src/http_request.h"
-#include "../src/buffer.h"
+#include "../src/lib/http_request.h"
+#include "../src/lib/buffer.h"
 
 using namespace server;
 

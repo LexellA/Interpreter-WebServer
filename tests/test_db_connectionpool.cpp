@@ -2,7 +2,7 @@
 #include <thread>
 #include <cppconn/statement.h>
 #include <mutex>
-#include "../src/db_connectionpool.h"
+#include "../src/lib/db_connectionpool.h"
 
 using namespace server;
 

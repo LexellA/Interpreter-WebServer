@@ -1,5 +1,6 @@
 
 #include <vector>
+#include <sstream>
 
 #include "http_request.h"
 #include "log.h"
@@ -20,11 +21,33 @@ const std::unordered_map<std::string_view, HTTPMethod> HTTPRequest::m_method_map
     {"PATCH", HTTPMethod::PATCH}
 };
 
+const std::unordered_map<HTTPMethod, std::string> HTTPRequest::m_method_str_map = 
+{
+    {HTTPMethod::GET, "GET"},
+    {HTTPMethod::POST, "POST"},
+    {HTTPMethod::PUT, "PUT"},
+    {HTTPMethod::DELETE, "DELETE"},
+    {HTTPMethod::HEAD, "HEAD"},
+    {HTTPMethod::CONNECT, "CONNECT"},
+    {HTTPMethod::OPTIONS, "OPTIONS"},
+    {HTTPMethod::TRACE, "TRACE"},
+    {HTTPMethod::PATCH, "PATCH"},
+    {HTTPMethod::UNKNOWN, "UNKNOWN"}
+};
+
 const std::unordered_map<std::string_view, HTTPVersion> HTTPRequest::m_version_map = 
 {
     {"HTTP/1.0", HTTPVersion::HTTP_10},
     {"HTTP/1.1", HTTPVersion::HTTP_11},
-    {"HTTP/2.0", HTTPVersion::HTTP_20}
+    {"HTTP/2.0", HTTPVersion::HTTP_20},
+};
+
+const std::unordered_map<HTTPVersion, std::string> HTTPRequest::m_version_str_map = 
+{
+    {HTTPVersion::HTTP_10, "HTTP/1.0"},
+    {HTTPVersion::HTTP_11, "HTTP/1.1"},
+    {HTTPVersion::HTTP_20, "HTTP/2.0"},
+    {HTTPVersion::UNKNOWN, "UNKNOWN"}
 };
 
 
@@ -45,6 +68,7 @@ void HTTPRequest::reset()
     m_path.clear();
     m_body.clear();
     m_headers.clear();
+    m_query_params.clear();
     m_state = ParseState::REQUEST_LINE;
 }
 
@@ -94,6 +118,7 @@ bool HTTPRequest::parse(Buffer& buffer)
             if(m_headers.count("Content-Length") == 0)
             {
                 m_state = ParseState::FINISHED;
+                pos -= CRLF.size();
                 break;
             }
             len = std::stoi(m_headers["Content-Length"]);
@@ -134,11 +159,46 @@ bool HTTPRequest::parse_request_line(std::string_view request_line)
     m_version = parse_version(parts[2]);
 
     m_path = parts[1];
+    pos = m_path.find('?');
+    if(pos != std::string_view::npos)
+    {
+        std::string_view query_string(m_path);
+        parse_query_string(query_string.substr(pos + 1));
+        m_path = m_path.substr(0, pos);
+    }
 
     m_state = ParseState::HEADER;
 
     if(m_method == HTTPMethod::UNKNOWN || m_version == HTTPVersion::UNKNOWN)
         return false;
+
+    return true;
+}
+
+bool HTTPRequest::parse_query_string(std::string_view query_string)
+{
+    if(query_string.empty())
+        return false;
+
+    size_t pos = 0, end = 0;
+    while ((end = query_string.find('&', pos)) != std::string_view::npos)
+    {
+        std::string_view param = query_string.substr(pos, end - pos);
+        size_t equal_pos = param.find('=');
+        if(equal_pos == std::string_view::npos)
+            return false;
+        std::string_view key = param.substr(0, equal_pos);
+        std::string_view value = param.substr(equal_pos + 1);
+        m_query_params[std::string(key)] = decode(value);
+        pos = end + 1;
+    }
+    std::string_view param = query_string.substr(pos);
+    size_t equal_pos = param.find('=');
+    if(equal_pos == std::string_view::npos)
+        return false;
+    std::string_view key = param.substr(0, equal_pos);
+    std::string_view value = param.substr(equal_pos + 1);
+    m_query_params[std::string(key)] = decode(value);
 
     return true;
 }
@@ -162,6 +222,37 @@ bool HTTPRequest::parse_header(std::string_view header)
     return true;
 }
 
+std::string HTTPRequest::decode(std::string_view str)
+{
+    std::string result;
+    for(size_t i = 0; i < str.size(); i++)
+    {
+        if(str[i] == '%' && i + 2 < str.size())
+        {
+            int value;
+            std::istringstream iss(std::string(str.substr(i + 1, 2)));
+            if(iss >> std::hex >>value)
+            {
+                result += static_cast<char>(value);
+                i += 2;
+            }
+            else
+            {
+                result += '%';
+            }
+        }
+        else if(str[i] == '+')
+        {
+            result += ' ';
+        }
+        else
+        {
+            result += str[i];
+        }
+    }
+    return result;
+}
+
 HTTPMethod HTTPRequest::parse_method(std::string_view method)
 {
     auto it = m_method_map.find(method);
@@ -178,6 +269,19 @@ HTTPVersion HTTPRequest::parse_version(std::string_view version)
         return it->second;
     else
         return HTTPVersion::UNKNOWN;
+}
+
+bool HTTPRequest::is_keep_alive() const
+{
+    if (get_version() == HTTPVersion::HTTP_10)
+    {
+        return m_headers.find("Connection") != m_headers.end() && m_headers.at("Connection") == "keep-alive";
+    }
+    else
+    {
+        return m_headers.find("Connection") == m_headers.end() || m_headers.at("Connection") != "close";
+    }
+    return false;
 }
 
 } // namespace server

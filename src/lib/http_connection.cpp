@@ -69,10 +69,10 @@ ssize_t HTTPConnection::write(int* saved_errno)
 }
 
 
-void HTTPConnection::parse_request()
+bool HTTPConnection::parse_request()
 {
     m_request.reset();
-    m_request.parse(m_read_buf);
+    return m_request.parse(m_read_buf);
 }
 
 void HTTPConnection::make_response()
@@ -95,6 +95,11 @@ void HTTPConnection::make_response()
         m_iov_cnt = 1;
     }
 
+}
+
+bool HTTPConnection::is_keep_alive() const
+{
+    return m_request.is_keep_alive();
 }
 
 } // namespace server

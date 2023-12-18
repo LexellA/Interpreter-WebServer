@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 #include <iostream>
-#include "../src/http_connection.h"
+#include "../src/lib/http_connection.h"
 
 using namespace server;
 

@@ -165,30 +165,35 @@ void Log::write(Level level, const std::string& format, Args... args)
 
 }
 
+//usage: log_debug("hello world, {}", "format");
 template <typename... Args>
 inline void log_debug(const std::string& format, Args... args)
 {
     Log::get_instance().write(Log::Level::DEBUG, format, args...);
 }
 
+//usage: log_info("hello world, {}", "format");
 template <typename... Args>
 inline void log_info(const std::string& format, Args... args)
 {
     Log::get_instance().write(Log::Level::INFO, format, args...);
 }
 
+//usage: log_warn("hello world, {}", "format");
 template <typename... Args>
 inline void log_warn(const std::string& format, Args... args)
 {
     Log::get_instance().write(Log::Level::WARN, format, args...);
 }
 
+//usage: log_error("hello world, {}", "format");
 template <typename... Args>
 inline void log_error(const std::string& format, Args... args)
 {
     Log::get_instance().write(Log::Level::ERROR, format, args...);
 }
 
+//usage: log_fatal("hello world, {}", "format");
 template <typename... Args>
 inline void log_fatal(const std::string& format, Args... args)
 {

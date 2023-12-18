@@ -27,28 +27,29 @@ const std::unordered_map<HTTPStatus, std::string> HTTPResponse::m_status_map =
 };
 
 const std::unordered_map<std::string, std::string> HTTPResponse::m_content_type_map =
-{
-    {"html",       "text/html"},
-    {"xml",        "text/xml"},
-    {"xhtml",      "application/xhtml+xml"},
-    {"txt",        "text/plain"},
-    {"rtf",        "application/rtf"},
-    {"pdf",        "application/pdf"},
-    {"word",       "application/msword"},
-    {"png",        "image/png"},
-    {"gif",        "image/gif"},
-    {"jpg",        "image/jpeg"},
-    {"jpeg",       "image/jpeg"},
-    {"au",         "audio/basic"},
-    {"mpeg",       "video/mpeg"},
-    {"mpg",        "video/mpeg"},
-    {"avi",        "video/x-msvideo"},
-    {"gz",         "application/x-gzip"},
-    {"tar",        "application/x-tar"},
-    {"css",        "text/css"},
-    {"js",         "text/javascript"},
-    {"json",       "application/json"}
-};
+    {
+        {"html", "text/html; charset=utf-8"},
+        {"xml", "text/xml"},
+        {"xhtml", "application/xhtml+xml"},
+        {"txt", "text/plain"},
+        {"rtf", "application/rtf"},
+        {"pdf", "application/pdf"},
+        {"word", "application/msword"},
+        {"png", "image/png"},
+        {"gif", "image/gif"},
+        {"jpg", "image/jpeg"},
+        {"jpeg", "image/jpeg"},
+        {"au", "audio/basic"},
+        {"mpeg", "video/mpeg"},
+        {"mpg", "video/mpeg"},
+        {"avi", "video/x-msvideo"},
+        {"gz", "application/x-gzip"},
+        {"tar", "application/x-tar"},
+        {"css", "text/css"},
+        {"js", "text/javascript"},
+        {"json", "application/json"},
+        {"ico", "image/x-icon"}
+    };
 
 HTTPResponse::HTTPResponse()
     : m_status(HTTPStatus::UNKNOWN), m_data(nullptr), m_keep_alive(false), m_file_stat({})
@@ -104,6 +105,10 @@ void HTTPResponse::set_file(const std::string &srcdir, const std::string &path)
 {
     std::string filepath;
     filepath = srcdir + path;
+    if(path.back() == '/')
+    {
+        filepath += "index.html";
+    }
 
     if (stat(filepath.c_str(), &m_file_stat) < 0 || S_ISDIR(m_file_stat.st_mode))
     {
@@ -123,7 +128,7 @@ void HTTPResponse::set_file(const std::string &srcdir, const std::string &path)
     {
         m_status = HTTPStatus::NOT_FOUND;
         m_content = error_html("File Not Found!");
-        m_headers["Content-type"] = "text/html";
+        m_headers["Content-type"] = "text/html; charset=utf-8";
         return;
     }
 
@@ -134,10 +139,10 @@ void HTTPResponse::set_file(const std::string &srcdir, const std::string &path)
     {
         m_status = HTTPStatus::NOT_FOUND;
         m_content = error_html("File Not Found!");
-        m_headers["Content-type"] = "text/html";
+        m_headers["Content-type"] = "text/html; charset=utf-8";
         return;
     }
-    m_headers["Content-type"] = get_type(path.substr(path.find_last_of('.') + 1));
+    m_headers["Content-type"] = get_type(filepath.substr(filepath.find_last_of('.') + 1));
     m_headers["Content-length"] = std::to_string(m_file_stat.st_size);
 }
 

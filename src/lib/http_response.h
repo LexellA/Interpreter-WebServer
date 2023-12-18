@@ -22,8 +22,12 @@ public:
     void get_response(Buffer &buffer);
     bool has_mmap() const { return m_data != nullptr; }
     const char *get_content() const { return m_data; }
-    size_t get_content_length() const { return m_file_stat.st_size; }
-
+    size_t get_content_length() const 
+    {
+        return m_headers.count("Content-length") ? std::stoi(m_headers.at("Content-length")) : 0;
+    }
+    
+    const std::string& get_status_str() const { return m_status_map.at(m_status); }
 
 private:
     std::string get_type(const std::string &suffix);

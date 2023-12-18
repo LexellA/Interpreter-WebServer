@@ -1,6 +1,6 @@
 #include <iostream>
 #include <thread>
-#include "../src/log.h"
+#include "../src/lib/log.h"
 
 void log_thread()
 {

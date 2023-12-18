@@ -1,7 +1,7 @@
 
 #test log
 add_executable(test_log test_log.cpp
-                        ${CMAKE_SOURCE_DIR}/src/log.cpp)
+                        ${CMAKE_SOURCE_DIR}/src/lib/log.cpp)
 
 target_include_directories(test_log PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -12,7 +12,7 @@ add_test(NAME test_log COMMAND test_log)
 
 #test thread pool
 add_executable(test_thread_pool test_threadpool.cpp
-                                ${CMAKE_SOURCE_DIR}/src/threadpool.cpp)
+                                ${CMAKE_SOURCE_DIR}/src/lib/threadpool.cpp)
 
 target_include_directories(test_thread_pool PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -23,7 +23,7 @@ add_test(NAME test_thread_pool COMMAND test_thread_pool)
 #test db connection pool
 
 add_executable(test_db_connectionpool test_db_connectionpool.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/db_connectionpool.cpp)
+                                    ${CMAKE_SOURCE_DIR}/src/lib/db_connectionpool.cpp)
 
 target_include_directories(test_db_connectionpool PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -35,9 +35,9 @@ add_test(NAME test_db_connectionpool COMMAND test_db_connectionpool)
 
 #test httprequest
 add_executable(test_httprequest test_http_request.cpp
-                                ${CMAKE_SOURCE_DIR}/src/http_request.cpp
-                                ${CMAKE_SOURCE_DIR}/src/log.cpp
-                                ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+                                ${CMAKE_SOURCE_DIR}/src/lib/http_request.cpp
+                                ${CMAKE_SOURCE_DIR}/src/lib/log.cpp
+                                ${CMAKE_SOURCE_DIR}/src/lib/buffer.cpp)
 
 target_include_directories(test_httprequest PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -48,7 +48,7 @@ add_test(NAME test_httprequest COMMAND test_httprequest)
 #test buffer
 
 add_executable(test_buffer test_buffer.cpp
-                            ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+                            ${CMAKE_SOURCE_DIR}/src/lib/buffer.cpp)
 
 target_include_directories(test_buffer PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -59,9 +59,9 @@ add_test(NAME test_buffer COMMAND test_buffer)
 #test httpresponse
 
 add_executable(test_httpresponse test_http_response.cpp
-                                ${CMAKE_SOURCE_DIR}/src/http_response.cpp
-                                ${CMAKE_SOURCE_DIR}/src/log.cpp
-                                ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+                                ${CMAKE_SOURCE_DIR}/src/lib/http_response.cpp
+                                ${CMAKE_SOURCE_DIR}/src/lib/log.cpp
+                                ${CMAKE_SOURCE_DIR}/src/lib/buffer.cpp)
 
 target_include_directories(test_httpresponse PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -74,11 +74,11 @@ add_test(NAME test_httpresponse COMMAND test_httpresponse)
 #test httpconnection
 
 add_executable(test_httpconnection test_http_connection.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/http_connection.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/http_request.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/http_response.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/log.cpp
-                                    ${CMAKE_SOURCE_DIR}/src/buffer.cpp)
+                                    ${CMAKE_SOURCE_DIR}/src/lib/http_connection.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/lib/http_request.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/lib/http_response.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/lib/log.cpp
+                                    ${CMAKE_SOURCE_DIR}/src/lib/buffer.cpp)
 
 target_include_directories(test_httpconnection PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
@@ -90,7 +90,8 @@ add_test(NAME test_httpconnection COMMAND test_httpconnection)
 
 #test timer
 add_executable(test_timer test_timer.cpp
-                            ${CMAKE_SOURCE_DIR}/src/timer.cpp)
+                            ${CMAKE_SOURCE_DIR}/src/lib/timer.cpp
+                            ${CMAKE_SOURCE_DIR}/src/lib/log.cpp)
 
 target_include_directories(test_timer PRIVATE ${CMAKE_SOURCE_DIR}/src)
 

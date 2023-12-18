@@ -19,6 +19,9 @@ public:
     HTTPConnection(int fd, const struct sockaddr_in& addr);
     ~HTTPConnection();
 
+    void set_timer(uint32_t id) { timer_id = id; }
+    uint32_t get_timer_id() const { return timer_id; }
+
     ssize_t read(int* saved_errno);
     ssize_t write(int* saved_errno);
 
@@ -26,16 +29,20 @@ public:
     const struct sockaddr_in& get_addr() const { return m_addr; }
     int get_port() const { return ntohs(m_addr.sin_port); }
     const char* get_ip() const { return inet_ntoa(m_addr.sin_addr); }
+    bool is_keep_alive() const;
+    int to_read() const { return m_read_buf.available(); }
+    int to_write() const { return m_iovec[0].iov_len + m_iovec[1].iov_len; }
 
     HTTPRequest& get_request() { return m_request; }
     HTTPResponse& get_response() { return m_response; }
 
-    void parse_request();
+    bool parse_request();
     void make_response();
 
     static void enable_et() { m_enable_et = true; }
     static void disable_et() { m_enable_et = false; }
 private:
+    uint32_t timer_id;
 
     int m_fd;
     struct sockaddr_in m_addr;

@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 #include <iostream>
-#include "../src/buffer.h"
+#include "../src/lib/buffer.h"
 
 using namespace server;
 

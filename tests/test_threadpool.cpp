@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "../src/threadpool.h"
+#include "../src/lib/threadpool.h"
 
 void test_threadpool()
 {
