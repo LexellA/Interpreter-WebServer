@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <stdexcept>
 #include <fcntl.h>
+#include <sys/resource.h>
 
 #include "serverbase.h"
 
@@ -11,7 +12,7 @@ namespace server
 
 ServerBase::ServerBase(int port, int trig_mode, int timeout, bool is_linger, int thread_num, const std::string& srcdir,
     const std::string sql_host, int sql_port, const std::string& sql_user, const std::string& sql_password, const std::string& db_name, int max_conn,
-    int timer_interval)
+    int timer_interval, Log::Level log_level)
     : m_port(port), 
     m_timeout(timeout), 
     m_is_linger(is_linger), 
@@ -27,7 +28,7 @@ ServerBase::ServerBase(int port, int trig_mode, int timeout, bool is_linger, int
     m_timer(new Timer(timer_interval))
 {
     //init log
-    Log::get_instance().init("./log");
+    Log::get_instance().init(log_level, "./log");
 
     //init triger mode
     m_listen_event = EPOLLRDHUP;
@@ -121,6 +122,16 @@ ServerBase::ServerBase(int port, int trig_mode, int timeout, bool is_linger, int
         log_error("Set listen fd nonblock error!");
         throw std::runtime_error("Set listen fd nonblock error!");
     }
+    
+    //init rlimit
+    struct rlimit rt{};
+    rt.rlim_max = rt.rlim_cur = m_max_connection + 512;
+    if(setrlimit(RLIMIT_NOFILE, &rt) == -1)
+    {
+        log_error("Setrlimit error!");
+        throw std::runtime_error("Setrlimit error!");
+    }
+
 
     //init router
     m_router->add_handler(HTTPMethod::GET, "default", std::bind(&ServerBase::default_handler, this, std::placeholders::_1, std::placeholders::_2));
@@ -148,6 +159,20 @@ ServerBase::~ServerBase()
 
 void ServerBase::start()
 {
+    std::thread input_thread([this]()
+    {
+        std::string cmd;
+        while(true)
+        {
+            std::cin >> cmd;
+            if(cmd == "exit")
+            {
+                is_running = false;
+                break;
+            }
+        }
+    });
+
     while(is_running)
     {
         m_timer->tick();
@@ -163,13 +188,14 @@ void ServerBase::start()
 
 
         int event_num = m_epoller->wait(m_timer_interval);
+        bool new_conn = false;
         for(int i = 0; i < event_num; i++)
         {
             int fd = m_epoller->get_event(i).data.fd;
             uint32_t events = m_epoller->get_event(i).events;
             if(fd == m_listen_fd)
             {
-                accept_connection();
+                new_conn = true;
             }
             else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
@@ -186,7 +212,7 @@ void ServerBase::start()
                 log_info("Write event, fd: {}", fd);
 
                 m_timer->reset_timer(it->second.get_timer_id(), m_timeout);
-                m_threadpool->add_task(std::bind(&ServerBase::process_write, this, std::ref(it->second)));
+                m_threadpool->add_task(&ServerBase::process_write, this, std::ref(it->second));
             }
             else if(events & EPOLLIN)
             {
@@ -199,10 +225,17 @@ void ServerBase::start()
                 log_info("Read event, fd: {}", fd);
 
                 m_timer->reset_timer(it->second.get_timer_id(), m_timeout);
-                m_threadpool->add_task(std::bind(&ServerBase::process_read, this, std::ref(it->second)));
+                m_threadpool->add_task(&ServerBase::process_read, this, std::ref(it->second));
             }
         }
+
+        if(new_conn)
+        {
+            accept_connection();
+        }
     }
+
+    input_thread.join();
 }
 
 void ServerBase::accept_connection()
@@ -217,18 +250,29 @@ void ServerBase::accept_connection()
 
         if(conn_fd <= 0)
         {
-            if(errno == EAGAIN || errno == EWOULDBLOCK)
+            switch(errno)
             {
-                break;
+                case EAGAIN:
+                    return; // No more connections to accept
+                case EBADF:
+                    log_error("Invalid listening socket!");
+                    return; // Serious error, stop accepting connections
+                case ECONNABORTED:
+                    continue; // Try to accept next connection
+                case EMFILE:
+                case ENFILE:
+                    log_error("File descriptor limit reached!");
+                    return; // Serious error, stop accepting connections
+                default:
+                    log_error("Unknown error in accept!");
+                    return; // Serious error, stop accepting connections
             }
-            log_error("Accept connection error!");
-            break;
         }
         if(m_connections.size() >= m_max_connection)
         {
             log_warn("Too many connections!");
             send(conn_fd, "Server busy!", 13, 0);
-            close_fd(conn_fd);
+            close(conn_fd);
             continue;
         }
 
@@ -356,9 +400,8 @@ void ServerBase::process(HTTPConnection& conn)
     }
     catch(const std::exception& e)
     {
-        send(conn.get_fd(), "HTTP/1.1 400 Bad Request\r\n\r\n", 29, 0);
         log_error("{}", e.what());
-        close_fd(conn.get_fd());
+        conn.get_response().init(HTTPStatus::BAD_REQUEST, false, "Bad Request", "txt");
     }
 
     log_debug(

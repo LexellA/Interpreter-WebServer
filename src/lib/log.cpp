@@ -16,7 +16,8 @@ void Log::flush()
 
 Log::Log()
     :m_close(true), m_count(0), m_thread(nullptr),
-    m_split_lines(0), m_day(0), m_method(Method::ASYNC)
+    m_split_lines(0), m_day(0), m_method(Method::ASYNC),
+    m_queue_size(0), m_level(Level::DEBUG)
 {}
 
 Log::~Log()
@@ -25,7 +26,7 @@ Log::~Log()
     {
         m_close = true;
         if(m_method == Method::ASYNC){
-            m_cond.notify_one();
+            m_cond_full.notify_one();
             m_thread->join();
         }
         m_fout.close();
@@ -40,11 +41,12 @@ void Log::async_write()
 
         // wait for new log
         std::unique_lock<std::mutex> lock(m_queue_mutex);
-        m_cond.wait(lock, [this](){ return !m_log_queue.empty() || m_close; });
+        m_cond_full.wait(lock, [this](){ return m_close || !m_log_queue.empty(); });
         if(m_close)
             return;
         str = std::move(m_log_queue.front());
         m_log_queue.pop();
+        m_cond_empty.notify_one();
         lock.unlock();
 
         // write log
@@ -53,10 +55,15 @@ void Log::async_write()
     }
 }
 
-void Log::init(const std::string& file_name,
+void Log::init(Level level,
+               const std::string& file_name,
                uint32_t split_lines,
-               Method m)
+               Method m, 
+               uint32_t queue_size)
 {
+    m_level = level;
+    m_queue_size = queue_size;
+
     auto pos = file_name.find_last_of('/');
     m_dir = file_name.substr(0, pos);
     if(pos == std::string::npos)

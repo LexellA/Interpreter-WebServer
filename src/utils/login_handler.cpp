@@ -23,7 +23,18 @@ LoginHandler::~LoginHandler()
 
 void LoginHandler::handle_login(const server::HTTPRequest& req, server::HTTPResponse& res)
 {
-    nlohmann::json userinfo = nlohmann::json::parse(req.get_body());
+    nlohmann::json userinfo;
+    try
+    {
+        userinfo = nlohmann::json::parse(req.get_body());
+    }
+    catch (const std::exception& e)
+    {
+        server::log_error("{}", e.what());
+        res.init(server::HTTPStatus::BAD_REQUEST, false, "Bad Request", "txt");
+        return;
+    }
+
     nlohmann::json response;
 
     std::string username = userinfo["username"];
@@ -61,7 +72,17 @@ void LoginHandler::handle_login(const server::HTTPRequest& req, server::HTTPResp
 
 void LoginHandler::handle_register(const server::HTTPRequest& req, server::HTTPResponse& res)
 {
-    nlohmann::json userinfo = nlohmann::json::parse(req.get_body());
+    nlohmann::json userinfo;
+    try
+    {
+        userinfo = nlohmann::json::parse(req.get_body());
+    }
+    catch (const std::exception& e)
+    {
+        server::log_error("{}", e.what());
+        res.init(server::HTTPStatus::BAD_REQUEST, false, "Bad Request", "txt");
+        return;
+    }
     nlohmann::json response;
 
     std::string username = userinfo["username"];

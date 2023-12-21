@@ -30,20 +30,22 @@ public:
 
     enum class Level
     {
-        DEBUG,
-        INFO,
-        WARN,
+        FATAL,
         ERROR,
-        FATAL
+        WARN,
+        INFO,
+        DEBUG
     };
 
 
     Log();
     ~Log();
 
-    void init(const std::string& file_name, 
-              uint32_t split_lines = 5000000,
-              Method m = Method::ASYNC);
+    void init(Level level, 
+              const std::string& file_name, 
+              uint32_t split_lines = 500000,
+              Method m = Method::ASYNC,
+              uint32_t queue_size = 2048);
 
     template <typename... Args>
     void write(Level level, const std::string &format, Args... args);
@@ -60,6 +62,8 @@ private:
     void async_write();
 
 private:
+    Level m_level;
+
     std::string m_file_name;
     std::string m_full_file_name;
     std::string m_dir;
@@ -72,9 +76,11 @@ private:
 
     Method m_method;
     std::queue<std::string> m_log_queue;
+    uint32_t m_queue_size;
     std::mutex m_queue_mutex;
     std::mutex m_mutex;
-    std::condition_variable m_cond;
+    std::condition_variable m_cond_empty;
+    std::condition_variable m_cond_full;
     std::unique_ptr<std::thread> m_thread;
 
     bool m_close;
@@ -83,6 +89,9 @@ private:
 template <typename... Args>
 void Log::write(Level level, const std::string& format, Args... args)
 {
+    if(level > m_level)
+        return;
+
     std::string str;
 
     auto now = std::chrono::system_clock::now();
@@ -148,10 +157,12 @@ void Log::write(Level level, const std::string& format, Args... args)
 
     if(m_method == Method::ASYNC)
     {
-        std::lock_guard<std::mutex> qlock(m_queue_mutex);
+        std::unique_lock<std::mutex> qlock(m_queue_mutex);
+        m_cond_empty.wait(qlock, [this](){ return m_log_queue.size() < m_queue_size; });
 
         m_log_queue.push(str);
-        m_cond.notify_one();
+
+        m_cond_full.notify_one();
     }
     else
     {

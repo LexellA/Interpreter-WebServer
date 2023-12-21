@@ -28,7 +28,7 @@ void log_thread()
 int main()
 {
     // Initialize the log
-    server::Log::get_instance().init("log.txt");
+    server::Log::get_instance().init(server::Log::Level::DEBUG, "log.txt");
 
     // Create multiple threads to log concurrently
     std::thread t1(log_thread);
