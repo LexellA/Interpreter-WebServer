@@ -22,11 +22,13 @@ Timer::~Timer()
 
 uint32_t Timer::add_timer(callback func, int timeout)
 {
+    // 创建定时器节点
     TimerNode node;
     node.id = m_next_id++;
     node.timeout = m_cur_time + miliseconds(timeout);
     node.func = func;
 
+    // 计算定时器在时间轮中的位置
     int level = 0;
     int ticks = timeout / m_slot_interval;
     while(ticks >= m_slot_per_level)
@@ -38,6 +40,7 @@ uint32_t Timer::add_timer(callback func, int timeout)
 
     m_wheel[level][slot].push_back(node);
 
+    // 记录定时器在时间轮中的位置
     node_position pos;
     pos.level = level;
     pos.slot = slot;
@@ -51,6 +54,7 @@ uint32_t Timer::add_timer(callback func, int timeout)
 
 void Timer::del_timer(uint32_t id)
 {
+    // 通过id找到定时器在时间轮中的位置，然后删除
     auto it = m_timer_map.find(id);
     if(it == m_timer_map.end())
     {
@@ -62,6 +66,7 @@ void Timer::del_timer(uint32_t id)
 
 bool Timer::reset_timer(uint32_t id, int timeout)
 {
+    // 通过id找到定时器在时间轮中的位置，然后重新设置
     auto it = m_timer_map.find(id);
     if(it == m_timer_map.end())
     {
@@ -92,13 +97,16 @@ bool Timer::reset_timer(uint32_t id, int timeout)
 
 void Timer::tick()
 {
+    // 计算时间轮转动的格数
     Clock::time_point now = Clock::now();
     int ticks = std::chrono::duration_cast<miliseconds>(now - m_cur_time).count() / m_slot_interval;
     m_cur_time = now;
 
     while(ticks--)
     {
+        // 时间轮转动一格
         m_cur_slot[0] = (m_cur_slot[0] + 1) % m_slot_per_level;
+
         int level = 0;
         while (level < m_max_level - 1 && m_cur_slot[level] == 0)
         {

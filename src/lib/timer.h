@@ -26,7 +26,7 @@ public:
         callback func;
     };
 
-    //slot_interval: the interval between two slots, in milliseconds
+    // slot_interval计时器的最小精度，单位ms
     Timer(size_t slot_interval = 1, int slot_per_level = 1000, int level = 5);
     ~Timer();
 
@@ -41,7 +41,7 @@ private:
         int level;
         int slot;
         std::list<TimerNode>::iterator iter;
-    };
+    };//记录定时器在时间轮中的位置
 
     std::vector<std::vector<std::list<TimerNode>>> m_wheel;
     uint32_t m_next_id;

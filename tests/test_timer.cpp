@@ -59,6 +59,7 @@ void test_tick()
 
 int main()
 {
+    Log::get_instance().init(Log::Level::DEBUG, "timer_test.txt");
     test_add_timer();
     test_del_timer();
     test_reset_timer();

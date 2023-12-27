@@ -18,6 +18,7 @@ Epoller::~Epoller()
     close(m_epoll_fd);
 }
 
+// 事件注册
 bool Epoller::add(int fd, uint32_t events)
 {
     epoll_event event;
@@ -26,6 +27,7 @@ bool Epoller::add(int fd, uint32_t events)
     return epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, fd, &event) == 0;
 }
 
+// 事件修改
 bool Epoller::modify(int fd, uint32_t events)
 {
     epoll_event event;
@@ -34,11 +36,13 @@ bool Epoller::modify(int fd, uint32_t events)
     return epoll_ctl(m_epoll_fd, EPOLL_CTL_MOD, fd, &event) == 0;
 }
 
+// 移除文件描述符
 bool Epoller::remove(int fd)
 {
     return epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, fd, nullptr) == 0;
 }
 
+// 等待事件
 int Epoller::wait(int timeout_ms)
 {
     return epoll_wait(m_epoll_fd, m_events.data(), static_cast<int>(m_events.size()), timeout_ms);

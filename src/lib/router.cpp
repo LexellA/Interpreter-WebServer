@@ -28,6 +28,7 @@ void Router::route(const HTTPRequest &req, HTTPResponse &res)
     }
     else
     {
+        // 如果没有对应的handler，则调用默认的handler
         it = m_handlers.find(std::make_pair(req.get_method(), "default"));
         if (it != m_handlers.end())
         {

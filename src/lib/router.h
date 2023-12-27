@@ -21,9 +21,10 @@ public:
     Router();
     ~Router();
 
+    // 添加handler
     void add_handler(HTTPMethod method, const std::string& path, handler h);
 
-    //true if there is a response
+    // 调用对应的handler
     void route(const HTTPRequest &req, HTTPResponse &res);
 
 private:
@@ -33,7 +34,7 @@ private:
         {
             return std::hash<int>()((int)k.first) ^ std::hash<std::string>()(k.second);
         }
-    };
+    };// method和path的hash函数
     
     std::unordered_map<key, handler, hash> m_handlers;
     

@@ -4,7 +4,7 @@ var bot = new ChatSDK({
       title: '智能助理'
     },
     robot: {
-      avatar: '//gw.alicdn.com/tfs/TB1U7FBiAT2gK0jSZPcXXcKkpXa-108-108.jpg'
+      avatar: './avatar.jpg',
     },
     user: {
       avatar: '//gw.alicdn.com/tfs/TB1DYHLwMHqK1RjSZFEXXcGMXXa-56-62.svg',

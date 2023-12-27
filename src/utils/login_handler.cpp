@@ -11,8 +11,8 @@
 namespace utils
 {
 
-LoginHandler::LoginHandler(std::shared_ptr<server::DBConnectionPool> dbpool)
-    : m_dbpool(dbpool)
+LoginHandler::LoginHandler(std::shared_ptr<server::DBConnectionPool> dbpool, std::shared_ptr<utils::Session> session)
+    : m_dbpool(dbpool), m_session(session)
 {   
 }
 
@@ -23,6 +23,7 @@ LoginHandler::~LoginHandler()
 
 void LoginHandler::handle_login(const server::HTTPRequest& req, server::HTTPResponse& res)
 {
+    // 获取请求体
     nlohmann::json userinfo;
     try
     {
@@ -42,12 +43,14 @@ void LoginHandler::handle_login(const server::HTTPRequest& req, server::HTTPResp
 
     bool is_login = false;
 
+    // 登录
     try
     {
         is_login = login(username, password);
     }
     catch (const std::exception& e)
     {
+        // 数据库错误
         response["success"] = false;
         response["message"] = "Internal Server Error";
         res.init(server::HTTPStatus::INTERNAL_SERVER_ERROR, false, response.dump(), "json");
@@ -68,6 +71,12 @@ void LoginHandler::handle_login(const server::HTTPRequest& req, server::HTTPResp
     server::log_info("user: {}, password: {}, LOGIN, result: {}", username, password, is_login);
 
     res.init(server::HTTPStatus::OK, true, response.dump(), "json");
+    if(is_login)
+    {
+        uint32_t ssid = m_session->get_ssid();
+        std::string sessionid = std::to_string(ssid);
+        res.add_header("Set-Cookie", "session_id=" + sessionid);
+    }
 }
 
 void LoginHandler::handle_register(const server::HTTPRequest& req, server::HTTPResponse& res)
@@ -140,6 +149,8 @@ bool LoginHandler::login(const std::string& username, const std::string& passwor
         server::log_error("database error: {}", e.what());
         throw e;
     }
+
+
 
     return true;
 }

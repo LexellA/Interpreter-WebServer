@@ -132,6 +132,7 @@ void HTTPResponse::set_file(const std::string &srcdir, const std::string &path)
         return;
     }
 
+    // 将文件映射到内存
     m_data = static_cast<char *>(mmap(nullptr, m_file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
     close(fd);
 
@@ -165,6 +166,7 @@ void HTTPResponse::get_response(Buffer &buffer)
 
 std::string HTTPResponse::error_html(const std::string& msg)
 {
+    // 无法打开文件时，返回的错误页面
     std::string body;
     body += "<html><title>Error</title>";
     body += "<body bgcolor=\"ffffff\">";

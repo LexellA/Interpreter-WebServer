@@ -16,10 +16,20 @@ public:
     HTTPResponse();
     ~HTTPResponse();
 
+    // 初始化， 传入状态码，是否保持连接，内容，内容类型
     void init(HTTPStatus status, bool keep_alive, const std::string &content = "", const std::string &content_type = "");
+    
+    // 设置文件，传入静态资源路径和文件路径
     void set_file(const std::string &srcdir, const std::string &path);
 
+    // 添加header
+    void add_header(const std::string &key, const std::string &value){
+        m_headers[key] = value;
+    }
+
+    // 获取响应
     void get_response(Buffer &buffer);
+    // 是否进行文件映射
     bool has_mmap() const { return m_data != nullptr; }
     const char *get_content() const { return m_data; }
     size_t get_content_length() const 

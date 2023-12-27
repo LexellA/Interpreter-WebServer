@@ -78,6 +78,7 @@ bool HTTPRequest::parse(Buffer& buffer)
     size_t pos = 0;
     std::string_view request(buffer.data(), buffer.available());
 
+    // 使用状态机解析请求
     while (m_state != ParseState::FINISHED)
     {
         size_t line_end = request.find(CRLF, pos);
@@ -177,6 +178,7 @@ bool HTTPRequest::parse_request_line(std::string_view request_line)
 
 bool HTTPRequest::parse_query_string(std::string_view query_string)
 {
+    // 解析请求参数
     if(query_string.empty())
         return false;
 
@@ -205,6 +207,7 @@ bool HTTPRequest::parse_query_string(std::string_view query_string)
 
 bool HTTPRequest::parse_header(std::string_view header)
 {
+    // 解析请求头
     if(header.empty())
     {
         m_state = ParseState::BODY;
@@ -224,6 +227,7 @@ bool HTTPRequest::parse_header(std::string_view header)
 
 std::string HTTPRequest::decode(std::string_view str)
 {
+    // 解码url
     std::string result;
     for(size_t i = 0; i < str.size(); i++)
     {
@@ -255,6 +259,7 @@ std::string HTTPRequest::decode(std::string_view str)
 
 HTTPMethod HTTPRequest::parse_method(std::string_view method)
 {
+    // 解析请求方法
     auto it = m_method_map.find(method);
     if(it != m_method_map.end())
         return it->second;
@@ -263,7 +268,8 @@ HTTPMethod HTTPRequest::parse_method(std::string_view method)
 }
 
 HTTPVersion HTTPRequest::parse_version(std::string_view version)
-{
+{ 
+    // 解析http版本
     auto it = m_version_map.find(version);
     if(it != m_version_map.end())
         return it->second;

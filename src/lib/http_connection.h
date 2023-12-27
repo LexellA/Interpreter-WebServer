@@ -48,7 +48,7 @@ private:
     struct sockaddr_in m_addr;
 
     int m_iov_cnt;
-    struct iovec m_iovec[2];
+    struct iovec m_iovec[2]; // 有文件映射的时候，用于分散读
 
     Buffer m_read_buf;
     Buffer m_write_buf;
@@ -56,7 +56,7 @@ private:
     HTTPRequest m_request;
     HTTPResponse m_response;
 
-    static bool m_enable_et;
+    static bool m_enable_et; // 是否开启ET模式
 };
 
 } // namespace server

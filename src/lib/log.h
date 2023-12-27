@@ -41,6 +41,8 @@ public:
     Log();
     ~Log();
 
+    // 初始化日志，level为日志级别，file_name为日志文件名，split_lines为日志文件最大行数
+    // m为日志写入方式，queue_size为异步队列大小
     void init(Level level, 
               const std::string& file_name, 
               uint32_t split_lines = 500000,
@@ -94,6 +96,7 @@ void Log::write(Level level, const std::string& format, Args... args)
 
     std::string str;
 
+    // 获取当前时间
     auto now = std::chrono::system_clock::now();
     time_t now_t = std::chrono::system_clock::to_time_t(now);
     auto us = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()) % 1000000;
@@ -128,6 +131,7 @@ void Log::write(Level level, const std::string& format, Args... args)
 
     m_count++;
 
+    // 每天创建一个日志文件，或者日志文件行数达到最大值时创建新的日志文件
     if (m_day != day.count())
     {
         m_day = day.count();
@@ -157,6 +161,7 @@ void Log::write(Level level, const std::string& format, Args... args)
 
     if(m_method == Method::ASYNC)
     {
+        // 异步写入
         std::unique_lock<std::mutex> qlock(m_queue_mutex);
         m_cond_empty.wait(qlock, [this](){ return m_log_queue.size() < m_queue_size; });
 
@@ -166,6 +171,7 @@ void Log::write(Level level, const std::string& format, Args... args)
     }
     else
     {
+        // 同步写入
         lock.lock();
 
         m_fout << str << std::endl;

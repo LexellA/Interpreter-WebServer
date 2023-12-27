@@ -6,10 +6,13 @@ project(ChatServer)
 
 # 资源文件
 file(COPY ${CMAKE_SOURCE_DIR}/root DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/scripts DESTINATION ${CMAKE_BINARY_DIR})
 
 # 源文件
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp
-                    ${PROJECT_SOURCE_DIR}/src/utils/*.cpp)
+                    ${PROJECT_SOURCE_DIR}/src/utils/*.cpp
+                    ${PROJECT_SOURCE_DIR}/src/interpreter/*.cpp
+                    ${PROJECT_SOURCE_DIR}/src/interpreter/ASTnodes/*.cpp)
 
 # 添加静态库
 file(GLOB_RECURSE LIB_SRC_FILES ${PROJECT_SOURCE_DIR}/src/lib/*.cpp)

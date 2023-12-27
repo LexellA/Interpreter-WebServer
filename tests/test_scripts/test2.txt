@@ -1,0 +1,48 @@
+VAR money 0
+VAR input "退出"
+
+FUNC start
+    RECV input
+    IF NE input "退出"
+        SEND "你好，请问有什么可以帮助你：查询，充值"
+        RECV input
+
+        VAR start_flag 0
+        IF EQ "查询" input
+            SET start_flag 1
+            SEND ADD ADD "您当前余额为：" money "，输入任意消息返回，输入退出来退出"
+        ENDIF
+
+        IF EQ "充值" input
+            SET start_flag 1
+            CALL charge
+        ENDIF
+
+        IF EQ start_flag 0
+            SEND "请检查您的输入，输入任意消息返回，输入退出来退出"
+        ENDIF
+        
+        CALL start
+    ENDIF
+ENDFUNC
+
+
+FUNC charge
+    SEND "请输入你要充值的数额"
+    RECV input
+
+    VAR charge_flag 0
+    IF GT input 0
+        SET charge_flag 1
+    ENDIF
+    IF EQ charge_flag 0
+        SEND "请输入正确的数值"
+    ENDIF
+
+    IF GE input 0
+        SET money ADD money input
+        SEND "充值成功，输入任意消息返回，输入退出来退出"
+    ENDIF
+ENDFUNC
+
+CALL start

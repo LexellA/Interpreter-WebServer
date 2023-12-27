@@ -1,0 +1,6 @@
+VAR str "hello"
+VAR rec "to rec"
+
+RECV rec
+
+SEND ADD str rec

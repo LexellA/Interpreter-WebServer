@@ -1,0 +1,91 @@
+VAR input "nothing"
+VAR phone_price 3799
+VAR ipad_price 4199
+VAR computer 9999
+
+VAR switch 2299
+VAR playstation 2999
+
+
+
+FUNC start
+    RECV input
+    SEND "欢迎使用商品查询系统，请输入您要进行的操作：查询，特价，退出"
+    RECV input
+    IF NE input "退出"
+        IF EQ input "查询"
+            CALL show_price
+        ENDIF
+
+        IF EQ input "特价"
+            CALL show_special
+        ENDIF
+
+        IF EQ input "折扣"
+            CALL show_discount
+        ENDIF
+        CALL start
+    ENDIF
+
+    IF EQ input "退出"
+        SEND "感谢您的使用"
+        SET input "nothing"
+    ENDIF
+
+ENDFUNC
+
+FUNC show_price
+
+    SEND "请输入您要查询的商品：手机，平板电脑，电脑"
+    RECV input
+
+    VAR flag1 0
+    IF EQ input "手机"
+        SET flag1 1
+        SEND ADD ADD "手机的价格为：" phone_price "，任意输入返回"
+    ENDIF
+
+    IF EQ input "平板电脑"
+        SET flag1 1
+        SEND ADD ADD "平板电脑的价格为：" ipad_price "，任意输入返回"
+    ENDIF
+
+    IF EQ input "电脑"
+        SET flag1 1
+        SEND ADD ADD "电脑的价格为：" computer "，任意输入返回"
+    ENDIF
+
+    IF EQ flag1 0
+        SEND "没有找到该商品，任意输入返回"
+    ENDIF
+
+ENDFUNC
+
+FUNC show_special
+
+    SEND "请输入您要查询的商品：switch，游戏机"
+    RECV input
+
+    VAR flag2 0
+    IF EQ input "switch"
+        SET flag2 1
+        SEND ADD ADD "switch的价格为：" switch "，任意输入返回"
+    ENDIF
+
+    IF EQ input "游戏机"
+        SET flag2 1
+        SEND ADD ADD "游戏机的价格为：" playstation "，任意输入返回"
+    ENDIF
+
+    IF EQ flag2 0
+        SEND "没有找到该商品，任意输入返回"
+    ENDIF
+
+ENDFUNC
+
+FUNC show_discount
+    SEND "当前所有商品均有9折优惠，任意输入返回"
+ENDFUNC
+
+
+CALL start

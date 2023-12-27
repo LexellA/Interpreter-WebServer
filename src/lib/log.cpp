@@ -39,7 +39,7 @@ void Log::async_write()
     {
         std::string str;
 
-        // wait for new log
+        // 等待队列非空
         std::unique_lock<std::mutex> lock(m_queue_mutex);
         m_cond_full.wait(lock, [this](){ return m_close || !m_log_queue.empty(); });
         if(m_close)
@@ -49,7 +49,7 @@ void Log::async_write()
         m_cond_empty.notify_one();
         lock.unlock();
 
-        // write log
+        // 写入日志
         std::lock_guard<std::mutex> guard(m_mutex);
         m_fout << str << std::endl;
     }
@@ -75,7 +75,7 @@ void Log::init(Level level,
     m_method = m;
     m_close = false;
 
-    // get current date
+    // 获取当前时间
     auto now = std::chrono::system_clock::now();
     auto now_t = std::chrono::system_clock::to_time_t(now);
     m_day = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch()).count();
@@ -83,14 +83,14 @@ void Log::init(Level level,
     ss << std::put_time(std::localtime(&now_t), "%Y-%m-%d") << "_";
     m_full_file_name = ss.str() + m_file_name;
 
-    // open log file
+    // 打开日志文件
     m_fout.open(m_dir + "/" + m_full_file_name, std::ios::app);
     if(!m_fout.is_open())
     {
         throw std::runtime_error("open log file failed: " + m_dir + "/" + m_full_file_name);
     }
 
-    // start async write
+    // 开始异步写入
     if(m == Method::ASYNC)
     {
         m_thread.reset(new std::thread(std::bind(&Log::async_write, this)));

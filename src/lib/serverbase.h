@@ -33,12 +33,14 @@ public:
     void start();
 
 protected:
-    void add_handler(HTTPMethod method, const std::string &path, Router::handler h);
-    std::shared_ptr<DBConnectionPool> get_dbpool() { return m_dbpool; }
+    virtual void default_handler(const HTTPRequest& req, HTTPResponse& res);
 
+    void add_handler(HTTPMethod method, const std::string &path, Router::handler h);
+    int add_timer(std::function<void()> func, int timeout);
+    std::shared_ptr<DBConnectionPool> get_dbpool() { return m_dbpool; }
+    const std::string& get_srcdir() { return m_srcdir; }
 
 private:
-    virtual void default_handler(const HTTPRequest& req, HTTPResponse& res);
 
     void accept_connection();
     void close_connection(int fd);
@@ -47,31 +49,31 @@ private:
     void process_write(HTTPConnection& conn);
     void process(HTTPConnection& conn);
 
-    bool is_running;
+    bool is_running;// 服务器是否正在运行
 
-    int m_port;
-    int m_timeout;//ms
-    bool m_is_linger;
-    int m_listen_fd;
-    int m_max_connection;
+    int m_port; // 端口
+    int m_timeout;// 超时时间
+    bool m_is_linger; // 是否开启linger
+    int m_listen_fd; 
+    int m_max_connection; // 最大连接数
 
-    uint32_t m_listen_event;
-    uint32_t m_connection_event;
+    uint32_t m_listen_event; // 监听事件
+    uint32_t m_connection_event; // 连接事件
 
-    std::string m_srcdir;
+    std::string m_srcdir; // 静态资源路径
 
-    std::unique_ptr<Epoller> m_epoller;
-    std::unique_ptr<ThreadPool> m_threadpool;
-    std::shared_ptr<DBConnectionPool> m_dbpool;
-    std::unique_ptr<Router> m_router;
+    std::unique_ptr<Epoller> m_epoller; // epoll
+    std::unique_ptr<ThreadPool> m_threadpool; // 线程池
+    std::shared_ptr<DBConnectionPool> m_dbpool; // 数据库连接池
+    std::unique_ptr<Router> m_router; // 路由
 
-    std::unique_ptr<Timer> m_timer;
-    int m_timer_interval;
+    std::unique_ptr<Timer> m_timer; // 定时器
+    int m_timer_interval; // 定时器间隔
 
-    std::queue<int> close_queue;
-    std::mutex m_qmutex;
+    std::queue<int> close_queue; // 需要关闭的连接队列
+    std::mutex m_qmutex; // 队列锁
 
-    std::unordered_map<int, HTTPConnection> m_connections;
+    std::unordered_map<int, HTTPConnection> m_connections; // 连接集合
 };
 
 } // namespace server

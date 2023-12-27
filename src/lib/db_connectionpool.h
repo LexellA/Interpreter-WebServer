@@ -22,7 +22,7 @@ public:
 
     using deleter = std::function<void(sql::Connection *)>;
 
-    //connection will be freed automatically when out of scope
+    //获取连接，使用完后自动释放
     std::unique_ptr<sql::Connection, deleter> get_connection();
 
     int get_conn_num() const { return m_connections.size(); }

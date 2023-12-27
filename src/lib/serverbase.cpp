@@ -159,6 +159,7 @@ ServerBase::~ServerBase()
 
 void ServerBase::start()
 {
+    // 输入exit退出服务器
     std::thread input_thread([this]()
     {
         std::string cmd;
@@ -195,14 +196,17 @@ void ServerBase::start()
             uint32_t events = m_epoller->get_event(i).events;
             if(fd == m_listen_fd)
             {
+                // 新连接
                 new_conn = true;
             }
             else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
+                // 关闭连接
                 close_connection(fd);
             }
             else if(events & EPOLLOUT)
             {
+                // 可写事件
                 auto it = m_connections.find(fd);
                 if(it == m_connections.end())
                 {
@@ -216,6 +220,7 @@ void ServerBase::start()
             }
             else if(events & EPOLLIN)
             {
+                // 可读事件
                 auto it = m_connections.find(fd);
                 if(it == m_connections.end())
                 {
@@ -253,21 +258,22 @@ void ServerBase::accept_connection()
             switch(errno)
             {
                 case EAGAIN:
-                    return; // No more connections to accept
+                    return; // 没有新连接了
                 case EBADF:
                     log_error("Invalid listening socket!");
-                    return; // Serious error, stop accepting connections
+                    return; 
                 case ECONNABORTED:
-                    continue; // Try to accept next connection
+                    continue; // 被中断，继续循环
                 case EMFILE:
                 case ENFILE:
                     log_error("File descriptor limit reached!");
-                    return; // Serious error, stop accepting connections
+                    return; 
                 default:
                     log_error("Unknown error in accept!");
-                    return; // Serious error, stop accepting connections
+                    return;
             }
         }
+        // 达到最大连接数
         if(m_connections.size() >= m_max_connection)
         {
             log_warn("Too many connections!");
@@ -276,12 +282,14 @@ void ServerBase::accept_connection()
             continue;
         }
 
+        // 添加新连接
         auto res = m_connections.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(conn_fd),
             std::forward_as_tuple(conn_fd, addr)
         );
 
+        // 添加失败
         if(!res.second)
         {
             log_error("Add connection error!");
@@ -289,7 +297,7 @@ void ServerBase::accept_connection()
             continue;
         }
 
-
+        // 添加到epoll
         if(!m_epoller->add(conn_fd, m_connection_event | EPOLLIN))
         {
             log_error("Add connection fd to epoll error!");
@@ -297,6 +305,7 @@ void ServerBase::accept_connection()
             continue;
         }
 
+        // 设置非阻塞
         if(fcntl(conn_fd, F_SETFL, fcntl(conn_fd, F_GETFD, 0) | O_NONBLOCK) < 0)
         {
             log_error("Set connection fd nonblock error!");
@@ -304,6 +313,7 @@ void ServerBase::accept_connection()
             continue;
         }
 
+        // 设置超时
         if(m_timeout > 0)
         {
             timer_id = m_timer->add_timer(std::bind(&ServerBase::close_fd, this, conn_fd), m_timeout);
@@ -425,6 +435,11 @@ void ServerBase::default_handler(const HTTPRequest& req, HTTPResponse& res)
 void ServerBase::add_handler(HTTPMethod method, const std::string &path, Router::handler h)
 {
     m_router->add_handler(method, path, h);
+}
+
+int ServerBase::add_timer(std::function<void()> func, int timeout)
+{
+    return m_timer->add_timer(func, timeout);
 }
 
 

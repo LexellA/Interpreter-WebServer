@@ -21,6 +21,7 @@ HTTPConnection::~HTTPConnection()
 
 ssize_t HTTPConnection::read(int* saved_errno)
 {
+    // 读取数据到缓冲区
     ssize_t n = -1;
     do{
         n = m_read_buf.read(m_fd, saved_errno);
@@ -32,6 +33,7 @@ ssize_t HTTPConnection::read(int* saved_errno)
 
 ssize_t HTTPConnection::write(int* saved_errno)
 {
+    // 写入数据到socket
     ssize_t n = -1;
     do
     {

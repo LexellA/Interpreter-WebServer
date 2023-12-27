@@ -11,9 +11,12 @@ ThreadPool::ThreadPool(size_t thread_num)
     m_stop = false;
     for(size_t i = 0; i < thread_num; ++i)
     {
+        // 创建线程并设置线程函数
         m_threads.emplace_back(
+            // 使用lambda表达式创建线程函数
             [this]()
             {
+                // 停止前一直获取任务并执行
                 while(!m_stop)
                 {
                     std::function<void()> task;

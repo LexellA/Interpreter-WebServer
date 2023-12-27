@@ -21,8 +21,8 @@ public:
     const epoll_event& get_event(int i) { return m_events[i]; }
 
 private:
-    int m_epoll_fd;
-    std::vector<struct epoll_event> m_events;
+    int m_epoll_fd; // epoll fd
+    std::vector<struct epoll_event> m_events; // 事件数组
 };
 
 } // namespace server

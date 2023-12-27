@@ -49,13 +49,11 @@ void test_db_connectionpool()
 
     std::vector<std::thread> threads;
 
-    // Create multiple threads to write data to the database
     for (int i = 0; i < 100; ++i)
     {
         threads.emplace_back(put_data, std::ref(connectionPool), i);
     }
 
-    // Wait for all threads to finish
     for (auto &thread : threads)
     {
         thread.join();
