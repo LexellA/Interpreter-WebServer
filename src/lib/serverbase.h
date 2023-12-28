@@ -42,7 +42,7 @@ protected:
 
 private:
 
-    void accept_connection();
+    void accept_connection(); 
     void close_connection(int fd);
     void close_fd(int fd);
     void process_read(HTTPConnection &conn);

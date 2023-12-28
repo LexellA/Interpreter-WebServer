@@ -7,9 +7,18 @@ homework of BUPT program designing lesson
 ### this project includes
 - [x] a simple web server
 - [x] a web client based on chatUI
-- [ ] a script interpreter
+- [x] a simple script interpreter
 
-it can run a script file and send the result to the client
+### functions
+
+- parse http request and generate http response
+- high performance, using epoll and thread pool
+- database connection pool with RAII using unique_ptr
+- timer implemented with hierarchical timer wheel
+- log system with asynchronous log
+- script interpreter, can run script file and send the result to client
+- chat system, receive and send message based on the result of script
+
 
 with class ServerBase, a server can be easily built
 
@@ -61,9 +70,6 @@ parameters are now hard coded, but it can be easily changed to read from config 
 - C++ 20, compiler should support text formating(gcc 13)
 - Linux
 
-## Installation
-
-[todo]
 
 ## Usage
 
