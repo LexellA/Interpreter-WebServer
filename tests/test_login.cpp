@@ -9,7 +9,7 @@ using namespace server;
 void testLoginHandler()
 {
     // 创建一个模拟的数据库连接池和会话对象
-    auto dbpool = std::make_shared<server::DBConnectionPool>("localhost", "root", "18523873534", "chatbot", 3306, 8);
+    auto dbpool = std::make_shared<server::DBConnectionPool>("localhost", "root", "123456", "chatbot", 3306, 8);
     auto session = std::make_shared<utils::Session>();
 
     // 创建一个LoginHandler对象

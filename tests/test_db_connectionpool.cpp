@@ -40,7 +40,7 @@ void test_db_connectionpool()
 {
     const std::string host = "localhost";
     const std::string user = "root";
-    const std::string password = "18523873534";
+    const std::string password = "123456";
     const std::string db_name = "chatbot";
     const int port = 3306;
     const int max_connections = 8;
