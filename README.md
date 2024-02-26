@@ -1,13 +1,13 @@
-# Chatbot-Server
+# Interpreter-WebServer
 
 ## Description
 
-homework of BUPT program designing lesson 
+project of BUPT program designing lesson 
 
 ### this project includes
-- [x] a simple web server
-- [x] a web client based on chatUI
-- [x] a simple script interpreter
+- a simple web server
+- a web client based on chatUI
+- a simple script interpreter
 
 ### functions
 
