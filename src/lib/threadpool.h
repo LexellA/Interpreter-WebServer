@@ -45,7 +45,7 @@ auto ThreadPool::add_task(Func&& func, Args&& ...args)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_tasks.emplace([task](){ (*task)(); });
-    }//将任务放入任务队列，使用lambda表达式，避免拷贝task
+    }//将任务放入任务队列，使用lambda表达式，复制task，防止future_error
 
     m_cond.notify_one();
 
