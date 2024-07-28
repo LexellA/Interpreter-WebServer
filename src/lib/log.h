@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <utility>
 
 
 
@@ -50,7 +51,8 @@ public:
               uint32_t queue_size = 2048);
 
     template <typename... Args>
-    void write(Level level, const std::string &format, Args... args);
+    void write(Level level, std::format_string<Args...> format,
+                    Args&&... args);
 
     void flush();
 
@@ -89,7 +91,7 @@ private:
 };
 
 template <typename... Args>
-void Log::write(Level level, const std::string& format, Args... args)
+void Log::write(Level level, std::format_string<Args...> format, Args&&... args)
 {
     if(level > m_level)
         return;
@@ -157,7 +159,7 @@ void Log::write(Level level, const std::string& format, Args... args)
 
     lock.unlock();
 
-    str += std::vformat(format, std::make_format_args(args...));
+    str += std::format(format, std::forward<Args>(args)...);
 
     if(m_method == Method::ASYNC)
     {
@@ -184,37 +186,36 @@ void Log::write(Level level, const std::string& format, Args... args)
 
 //usage: log_debug("hello world, {}", "format");
 template <typename... Args>
-inline void log_debug(const std::string& format, Args... args)
-{
-    Log::get_instance().write(Log::Level::DEBUG, format, args...);
+inline void log_debug(std::format_string<Args...> format, Args&&... args) {
+    Log::get_instance().write(Log::Level::DEBUG, format, std::forward<Args>(args)...);
 }
 
 //usage: log_info("hello world, {}", "format");
 template <typename... Args>
-inline void log_info(const std::string& format, Args... args)
+inline void log_info(std::format_string<Args...> format, Args&&... args)
 {
-    Log::get_instance().write(Log::Level::INFO, format, args...);
+    Log::get_instance().write(Log::Level::INFO, format, std::forward<Args>(args)...);
 }
 
 //usage: log_warn("hello world, {}", "format");
 template <typename... Args>
-inline void log_warn(const std::string& format, Args... args)
+inline void log_warn(std::format_string<Args...> format, Args&&... args)
 {
-    Log::get_instance().write(Log::Level::WARN, format, args...);
+    Log::get_instance().write(Log::Level::WARN, format, std::forward<Args>(args)...);
 }
 
 //usage: log_error("hello world, {}", "format");
 template <typename... Args>
-inline void log_error(const std::string& format, Args... args)
+inline void log_error(std::format_string<Args...> format, Args&&... args)
 {
-    Log::get_instance().write(Log::Level::ERROR, format, args...);
+    Log::get_instance().write(Log::Level::ERROR, format, std::forward<Args>(args)...);
 }
 
 //usage: log_fatal("hello world, {}", "format");
 template <typename... Args>
-inline void log_fatal(const std::string& format, Args... args)
+inline void log_fatal(std::format_string<Args...> format, Args&&... args)
 {
-    Log::get_instance().write(Log::Level::FATAL, format, args...);
+    Log::get_instance().write(Log::Level::FATAL, format, std::forward<Args>(args)...);
 }
 
 
