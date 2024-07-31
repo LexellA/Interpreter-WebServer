@@ -104,7 +104,7 @@ void Log::write(Level level, std::format_string<Args...> format, Args&&... args)
     auto us = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()) % 1000000;
     auto day = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&now_t), "%Y-%m-%d %H:%M:%S") << "." << us.count() << " ";
+    ss << std::put_time(std::localtime(&now_t), "%Y-%m-%d %H:%M:%S") << "." << std::setw(6) << std::setfill('0') << us.count() << " ";
     str += ss.str();
 
     switch(level)
@@ -180,8 +180,6 @@ void Log::write(Level level, std::format_string<Args...> format, Args&&... args)
 
         lock.unlock();
     }
-
-
 }
 
 //usage: log_debug("hello world, {}", "format");

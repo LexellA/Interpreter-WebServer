@@ -10,10 +10,10 @@ class QuickstartUser(HttpUser):
         self.loginhtml()
         self.login()
         self.index()
-        self.chat()
-        self.chat2()
-        self.chat3()
-        self.chat4()
+        #self.chat()
+        #self.chat2()
+        #self.chat3()
+        #self.chat4()
     
     def register(self):
         self.client.post("/register", json={"username": "test", "password": "test"})

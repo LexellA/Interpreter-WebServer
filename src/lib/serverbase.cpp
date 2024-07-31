@@ -1,5 +1,7 @@
 #include <sys/socket.h>
+#include <cmath>
 #include <stdexcept>
+#include "log.h"
 #include <fcntl.h>
 #include <sys/resource.h>
 
@@ -190,6 +192,7 @@ void ServerBase::start()
 
         int event_num = m_epoller->wait(m_timer_interval);
         bool new_conn = false;
+        log_debug("start event dispatch");
         for(int i = 0; i < event_num; i++)
         {
             int fd = m_epoller->get_event(i).data.fd;
@@ -233,6 +236,7 @@ void ServerBase::start()
                 m_threadpool->add_task(&ServerBase::process_read, this, std::ref(it->second));
             }
         }
+        log_debug("end event dispatch");
 
         if(new_conn)
         {
