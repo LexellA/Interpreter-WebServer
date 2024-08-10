@@ -72,11 +72,17 @@ void HTTPRequest::reset()
     m_state = ParseState::REQUEST_LINE;
 }
 
-bool HTTPRequest::parse(Buffer& buffer)
+HTTPRequest::RequestState HTTPRequest::parse(Buffer& buffer)
 {
     const std::string CRLF = "\r\n";
+    bool has_error = false;
     size_t pos = 0;
     std::string_view request(buffer.data(), buffer.available());
+
+    if(request.find(CRLF + CRLF) == std::string::npos)
+    {
+        return RequestState::INCOMPLETE;
+    }
 
     // 使用状态机解析请求
     while (m_state != ParseState::FINISHED)
@@ -89,7 +95,7 @@ bool HTTPRequest::parse(Buffer& buffer)
         case ParseState::REQUEST_LINE:
             if(line_end == std::string::npos)
             {
-                return false;
+                return RequestState::INCOMPLETE;
             }
             len = line_end - pos;
             line = std::string_view(request.data() + pos, len);
@@ -98,13 +104,14 @@ bool HTTPRequest::parse(Buffer& buffer)
             if (!parse_request_line(line))
             {
                 log_error("parse request line failed, request: \n{}\nerror line: {}", request, line);
-                return false;
+                has_error = true;
+                m_state = ParseState::HEADER;
             }
             break;
         case ParseState::HEADER:
             if(line_end == std::string::npos)
             {
-                return false;
+                return RequestState::INCOMPLETE;
             }
             len = line_end - pos;
             line = std::string_view(request.data() + pos, len);
@@ -112,7 +119,7 @@ bool HTTPRequest::parse(Buffer& buffer)
             if (!parse_header(line))
             {
                 log_error("parse header failed, header, request: \n{}\nerror header: {}", request, line);
-                return false;
+                has_error = true;
             }
             break;
         case ParseState::BODY:
@@ -123,6 +130,10 @@ bool HTTPRequest::parse(Buffer& buffer)
                 break;
             }
             len = std::stoi(m_headers["Content-Length"]);
+            if(request.size() < pos + len)
+            {
+                return RequestState::INCOMPLETE;
+            }
             m_body = std::string(request.data() + pos, len);
             m_state = ParseState::FINISHED;
             pos -= CRLF.size();
@@ -135,7 +146,7 @@ bool HTTPRequest::parse(Buffer& buffer)
     }
 
     buffer.pop_front(pos);
-    return true;
+    return has_error ? RequestState::INVALID : RequestState::OK;
 }
 
 bool HTTPRequest::parse_request_line(std::string_view request_line)
@@ -161,17 +172,18 @@ bool HTTPRequest::parse_request_line(std::string_view request_line)
 
     m_path = parts[1];
     pos = m_path.find('?');
+    bool query_ok = true;
     if(pos != std::string_view::npos)
     {
         std::string_view query_string(m_path);
-        parse_query_string(query_string.substr(pos + 1));
+        query_ok = parse_query_string(query_string.substr(pos + 1));
         m_path = m_path.substr(0, pos);
     }
 
+    if(m_method == HTTPMethod::UNKNOWN || m_version == HTTPVersion::UNKNOWN || !query_ok)
+      return false;
+    
     m_state = ParseState::HEADER;
-
-    if(m_method == HTTPMethod::UNKNOWN || m_version == HTTPVersion::UNKNOWN)
-        return false;
 
     return true;
 }
@@ -180,7 +192,7 @@ bool HTTPRequest::parse_query_string(std::string_view query_string)
 {
     // 解析请求参数
     if(query_string.empty())
-        return false;
+        return true;
 
     size_t pos = 0, end = 0;
     while ((end = query_string.find('&', pos)) != std::string_view::npos)

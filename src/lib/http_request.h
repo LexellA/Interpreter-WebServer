@@ -12,13 +12,18 @@ namespace server
 
 class HTTPRequest
 {
-public:
+ public:
+  enum class RequestState {
+    OK,
+    INVALID,
+    INCOMPLETE
+  };
     HTTPRequest();
     ~HTTPRequest();
 
     void reset();
 
-    bool parse(Buffer& buffer);
+    RequestState parse(Buffer& buffer);
 
     HTTPMethod get_method() const { return m_method; }
     HTTPVersion get_version() const { return m_version; }

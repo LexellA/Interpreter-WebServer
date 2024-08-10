@@ -29,10 +29,10 @@ void test_parse_request()
     Buffer buffer(1024);
     buffer.push_back(request);
     HTTPRequest http_request;
-    bool result = http_request.parse(buffer);
+    auto result = http_request.parse(buffer);
 
     // Verify the parsing result
-    assert(result == true);
+    assert(result == HTTPRequest::RequestState::OK);
     assert(http_request.get_method() == HTTPMethod::POST);
     assert(http_request.get_version() == HTTPVersion::HTTP_11);
     assert(http_request.get_path() == "/login");
@@ -62,10 +62,10 @@ void test_parse_request_invalid()
     Buffer buffer(1024);
     buffer.push_back(request);
     HTTPRequest http_request;
-    bool result = http_request.parse(buffer);
+    auto result = http_request.parse(buffer);
 
     // Verify the parsing result
-    assert(result == false);
+    assert(result == HTTPRequest::RequestState::INCOMPLETE);
 }
 
 int main()

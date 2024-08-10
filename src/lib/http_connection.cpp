@@ -70,11 +70,9 @@ ssize_t HTTPConnection::write(int* saved_errno)
     return n;
 }
 
-
-bool HTTPConnection::parse_request()
-{
-    m_request.reset();
-    return m_request.parse(m_read_buf);
+HTTPRequest::RequestState HTTPConnection::parse_request() {
+  m_request.reset();
+  return m_request.parse(m_read_buf);
 }
 
 void HTTPConnection::make_response()

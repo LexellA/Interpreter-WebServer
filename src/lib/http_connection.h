@@ -36,7 +36,7 @@ public:
     HTTPRequest& get_request() { return m_request; }
     HTTPResponse& get_response() { return m_response; }
 
-    bool parse_request();
+    HTTPRequest::RequestState parse_request();
     void make_response();
 
     static void enable_et() { m_enable_et = true; }

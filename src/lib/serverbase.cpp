@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <cmath>
 #include <stdexcept>
+#include "http_request.h"
 #include "log.h"
 #include <fcntl.h>
 #include <sys/resource.h>
@@ -192,7 +193,6 @@ void ServerBase::start()
 
         int event_num = m_epoller->wait(m_timer_interval);
         bool new_conn = false;
-        log_debug("start event dispatch");
         for(int i = 0; i < event_num; i++)
         {
             int fd = m_epoller->get_event(i).data.fd;
@@ -236,7 +236,6 @@ void ServerBase::start()
                 m_threadpool->add_task(&ServerBase::process_read, this, std::ref(it->second));
             }
         }
-        log_debug("end event dispatch");
 
         if(new_conn)
         {
@@ -385,27 +384,27 @@ void ServerBase::process_write(HTTPConnection& conn)
     close_fd(conn.get_fd());
 }
 
-void ServerBase::process(HTTPConnection& conn)
-{
-    if(conn.to_read() == 0)
-    {
+void ServerBase::process(HTTPConnection& conn) {
+    if(conn.to_read() == 0) {
         m_epoller->modify(conn.get_fd(), m_connection_event | EPOLLIN);
         return;
     }
 
-    bool parse_ok = conn.parse_request();
-    
-    if(!parse_ok)
-    {
-        log_error("Parse request error!");
+    HTTPRequest::RequestState request_state = conn.parse_request();
+
+    if (request_state == HTTPRequest::RequestState::INCOMPLETE) {
+        m_epoller->modify(conn.get_fd(), m_connection_event | EPOLLIN);
+        return;
     }
-    else
-    {
-        log_debug(
-            "Request from {}:{} fd: {} method: {} path: {} version: {}",
-            conn.get_ip(), conn.get_port(), conn.get_fd(), conn.get_request().get_method_str(), 
-            conn.get_request().get_path(), conn.get_request().get_version_str()
-        );
+
+    if (request_state == HTTPRequest::RequestState::INVALID) {
+        log_error("Parse request error!");
+    } else if(request_state == HTTPRequest::RequestState::OK) {
+        log_debug("Request from {}:{} fd: {} method: {} path: {} version: {}",
+                conn.get_ip(), conn.get_port(), conn.get_fd(),
+                conn.get_request().get_method_str(),
+                conn.get_request().get_path(),
+                conn.get_request().get_version_str());
     }
 
     try
@@ -428,6 +427,7 @@ void ServerBase::process(HTTPConnection& conn)
     conn.make_response();
 
     m_epoller->modify(conn.get_fd(), m_connection_event | EPOLLOUT);
+
 }
 
 void ServerBase::default_handler(const HTTPRequest& req, HTTPResponse& res)
